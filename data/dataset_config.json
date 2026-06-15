@@ -1,0 +1,16 @@
+{
+  "name": "WLASL",
+  "version": "0.3",
+  "total_videos": 641,
+  "total_glosses": 2000,
+  "splits": {
+    "train": 448,
+    "val": 96,
+    "test": 97
+  },
+  "vocab_size": 2000,
+  "hand_input_dim": 126,
+  "face_input_dim": 1404,
+  "pose_input_dim": 99,
+  "target_fps": 25
+}

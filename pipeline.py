@@ -31,7 +31,7 @@ class ASLRecognitionPipeline(nn.Module):
         self.pose_encoder = PoseEncoder(input_dim=pose_dim, output_dim=hidden_dim)
         
         # Cross-modal fusion
-        self.fusion = CrossModalFusionTransformer(d_model=hidden_dim, num_heads=6)
+        self.fusion = CrossModalFusionTransformer(d_model=hidden_dim, num_heads=8)
         
         # Streaming encoder
         self.conformer = ConformerStreamingEncoder(d_model=hidden_dim, num_heads=8)

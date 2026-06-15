@@ -1,3 +1,5 @@
+from pydantic import json
+
 import torch
 import cv2
 import numpy as np
@@ -16,7 +18,7 @@ class RealtimeInferencePipeline:
         self.device = torch.device(device)
         
         # Load model
-        self.model = ASLRecognitionPipeline(vocab_size=1000, 
+        self.model = ASLRecognitionPipeline(vocab_size=2000, 
                                            english_vocab_size=5000)
         checkpoint = torch.load(model_path, map_location=self.device)
         self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -32,10 +34,21 @@ class RealtimeInferencePipeline:
             'face': [],
             'pose': []
         }
-        self.max_buffer_size = 30  # ~1 second at 30 FPS
+        self.max_buffer_size = 10  # ~1 second at 30 FPS
         
         # Vocabulary (placeholder)
-        self.gloss_vocab = {i: f'gloss_{i}' for i in range(1000)}
+        #self.gloss_vocab = {i: f'gloss_{i}' for i in range(1000)}
+        import json
+
+        with open("data/gloss_vocab.json", "r") as f:
+            vocab = json.load(f)
+
+        self.gloss_vocab = {
+            int(idx): gloss
+            for gloss, idx in vocab["gloss_to_id"].items()
+        }
+
+        print(f"Loaded {len(self.gloss_vocab)} gloss labels")
         self.english_vocab = {i: f'word_{i}' for i in range(5000)}
     
     def process_frame(self, frame: np.ndarray) -> Dict:
@@ -107,7 +120,7 @@ class RealtimeInferencePipeline:
     
     def run_webcam(self, camera_id: int = 0):
         """Run real-time inference from webcam"""
-        cap = cv2.VideoCapture(camera_id)
+        cap = cv2.VideoCapture(camera_id, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FPS, 30)
         
         print("Starting real-time inference. Press 'q' to quit.")
@@ -192,3 +205,10 @@ class RealtimeInferencePipeline:
         print(f"Average latency: {np.mean([r['latency_ms'] for r in results_list]):.1f}ms")
         
         return results_list
+
+if __name__ == "__main__":
+    pipeline = RealtimeInferencePipeline(
+        model_path="./checkpoints/best.pt"
+    )
+
+    pipeline.run_webcam()

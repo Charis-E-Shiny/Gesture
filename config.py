@@ -7,7 +7,7 @@ from pathlib import Path
 # ============ Model Configuration ============
 
 MODEL_CONFIG = {
-    'vocab_size': 1000,                 # ASL gloss vocabulary size
+    'vocab_size': 2000,                 # ASL gloss vocabulary size (from WLASL)
     'english_vocab_size': 5000,         # English vocabulary size
     'hidden_dim': 512,                  # Model hidden dimension
     

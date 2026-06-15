@@ -1,3 +1,8 @@
+from fileinput import filename
+from importlib.metadata import metadata
+
+from pydantic import json
+
 import torch
 import numpy as np
 import cv2
@@ -130,76 +135,173 @@ class MediaPipeLandmarkExtractor:
 
 
 class LandmarkDataset(torch.utils.data.Dataset):
-    """Dataset for ASL recognition"""
+    """Dataset for ASL recognition - supports WLASL and custom datasets"""
     
-    def __init__(self, data_dir: str, split: str = 'train'):
+    def __init__(self, data_dir: str, split: str = 'train', metadata_file: str = None):
         """
         Args:
             data_dir: directory containing video files
             split: 'train', 'val', or 'test'
+            metadata_file: optional path to metadata.json from WLASL setup
         """
         self.data_dir = Path(data_dir)
         self.split = split
         self.extractor = MediaPipeLandmarkExtractor()
-        
-        # This is a placeholder - would be replaced with actual dataset loading
         self.samples = []
-        self._load_dataset()
+        self.gloss_to_id = {}
+
+        vocab_file = Path(data_dir).parent / "gloss_vocab.json"
+
+        if vocab_file.exists():
+            import json
+
+            with open(vocab_file, "r") as f:
+                vocab = json.load(f)
+
+                self.gloss_to_id = vocab["gloss_to_id"]
+        else:
+            raise FileNotFoundError(f"Could not find {vocab_file}")
+
+        self.id_to_gloss = {
+            idx: gloss
+            for gloss, idx in self.gloss_to_id.items()
+        }
+
+        print(f"Loaded {len(self.gloss_to_id)} gloss mappings")
+        
+        # Try to load from metadata if available
+        if metadata_file and Path(metadata_file).exists():
+            self._load_from_metadata(metadata_file)
+        else:
+            self._load_dataset()
+    
+    def _load_from_metadata(self, metadata_file: str):
+        import json
+
+        with open(metadata_file, 'r') as f:
+            metadata = json.load(f)
+
+        if self.split in    metadata['splits']:
+
+            for video_entry in metadata['splits'][self.split]['videos']:
+
+                filename = video_entry['filename']
+                gloss = video_entry['gloss']
+
+                video_path = self.data_dir / filename
+
+                if video_path.exists():
+
+                    gloss_id = self.gloss_to_id.get(gloss, 1)
+
+                    self.samples.append(
+                        (
+                            str(video_path),
+                            gloss,
+                            gloss_id
+                        )
+                    )
+
+        print(f"Loaded {len(self.samples)} videos from {self.split} split")
     
     def _load_dataset(self):
-        """Load dataset samples"""
-        # Placeholder: load from data_dir
+        """Load dataset samples from directory structure"""
+        # Supports structure: data/split/gloss_name/video.mp4
         video_files = list(self.data_dir.glob(f'{self.split}/**/*.mp4'))
         
         for video_file in video_files:
-            # Extract gloss from filename or metadata
-            gloss = video_file.stem  # Use filename as gloss
-            self.samples.append((str(video_file), gloss))
+            # Extract gloss from parent folder
+            gloss = video_file.parent.name
+            gloss_id = self.gloss_to_id.get(gloss, 1)
+
+            self.samples.append(
+                (
+                    str(video_file),
+                    gloss,
+                    gloss_id
+                )
+            )
+        
+        if len(self.samples) > 0:
+            print(f"Loaded {len(self.samples)} videos from {self.data_dir}/{self.split}")
     
     def __len__(self):
         return len(self.samples)
     
     def __getitem__(self, idx):
-        video_path, gloss = self.samples[idx]
+        video_path, gloss, gloss_id = self.samples[idx]
         
-        # Extract landmarks
-        hand_lm, face_lm, pose_lm = self.extractor.process_video(video_path)
-        
-        # Concatenate landmarks
-        landmarks = np.concatenate([hand_lm, face_lm, pose_lm], axis=1)
-        
-        return {
-            'landmarks': torch.from_numpy(landmarks).float(),
-            'gloss': gloss,
-            'video_path': video_path
-        }
+        try:
+            # Extract landmarks
+            hand_lm, face_lm, pose_lm = self.extractor.process_video(video_path)
+            
+            # Handle empty videos
+            if len(hand_lm) == 0:
+                # Return a dummy single frame if video is empty
+                hand_lm = np.zeros((1, 126), dtype=np.float32)
+                face_lm = np.zeros((1, 1404), dtype=np.float32)
+                pose_lm = np.zeros((1, 99), dtype=np.float32)
+            
+            # Concatenate landmarks (seq_len, 126+1404+99)
+            landmarks = np.concatenate([hand_lm, face_lm, pose_lm], axis=1)
+            
+            # gloss_id = self.gloss_to_id.get(gloss, self.gloss_to_id.get('<unk>', 1))
+
+            return {
+                'landmarks': torch.from_numpy(landmarks).float(),
+                'gloss': gloss,
+                'gloss_id': gloss_id,
+                'video_path': video_path
+            }
+        except Exception as e:
+            print(f"Error processing {video_path}: {e}")
+            # Return zeros if there's an error
+            landmarks = np.zeros((1, 1629), dtype=np.float32)
+            gloss_id = self.gloss_to_id.get(gloss,
+                                self.gloss_to_id.get('<unk>', 1))
+
+            return {
+                'landmarks': torch.from_numpy(landmarks).float(),
+                'gloss': gloss,
+                'gloss_id': gloss_id,
+                'video_path': video_path
+            }
 
 
 class LandmarkCollator:
-    """Custom collator for landmark data (handles variable length sequences)"""
-    
-    def __init__(self, pad_value: float = 0.0):
+    def __init__(self, pad_value=0.0):
         self.pad_value = pad_value
-    
+
     def __call__(self, batch):
         landmarks_list = [item['landmarks'] for item in batch]
+
         glosses = [item['gloss'] for item in batch]
-        
-        # Pad sequences to maximum length in batch
+
+        gloss_ids = torch.tensor(
+            [item['gloss_id'] for item in batch],
+            dtype=torch.long
+        )
+
         max_len = max(l.shape[0] for l in landmarks_list)
-        
+
         padded_landmarks = []
         lengths = []
-        
+
         for landmarks in landmarks_list:
-            padded = torch.full((max_len, landmarks.shape[1]),
-                              self.pad_value, dtype=landmarks.dtype)
-            padded[:landmarks.shape[0], :] = landmarks
+            padded = torch.full(
+                (max_len, landmarks.shape[1]),
+                self.pad_value,
+                dtype=landmarks.dtype
+            )
+
+            padded[:landmarks.shape[0]] = landmarks
+
             padded_landmarks.append(padded)
             lengths.append(landmarks.shape[0])
-        
+
         return {
             'landmarks': torch.stack(padded_landmarks),
             'glosses': glosses,
+            'gloss_ids': gloss_ids,
             'lengths': torch.tensor(lengths, dtype=torch.long)
         }

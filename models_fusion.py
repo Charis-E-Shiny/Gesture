@@ -7,17 +7,18 @@ from typing import Optional
 class MultiHeadCrossAttention(nn.Module):
     """Cross-attention module for multi-modal fusion"""
     
-    def __init__(self, d_model: int = 512, num_heads: int = 6):
+    def __init__(self, d_model: int = 512, num_heads: int = 8, kv_dim: int = None):
         super().__init__()
         self.num_heads = num_heads
         self.d_model = d_model
+        self.kv_dim = kv_dim or d_model  # Allow different input dim for key/value
         
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
         self.head_dim = d_model // num_heads
         
         self.query = nn.Linear(d_model, d_model)
-        self.key = nn.Linear(d_model, d_model)
-        self.value = nn.Linear(d_model, d_model)
+        self.key = nn.Linear(self.kv_dim, d_model)  # Project kv_dim to d_model
+        self.value = nn.Linear(self.kv_dim, d_model)  # Project kv_dim to d_model
         self.out = nn.Linear(d_model, d_model)
         
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor,
@@ -46,9 +47,9 @@ class MultiHeadCrossAttention(nn.Module):
 
 
 class CrossModalFusionTransformer(nn.Module):
-    """Cross-modal fusion with concat and cross-attention (6 heads)"""
+    """Cross-modal fusion with concat and cross-attention (8 heads)"""
     
-    def __init__(self, d_model: int = 512, num_heads: int = 6, num_layers: int = 2):
+    def __init__(self, d_model: int = 512, num_heads: int = 8, num_layers: int = 2):
         super().__init__()
         self.d_model = d_model
         
@@ -56,8 +57,9 @@ class CrossModalFusionTransformer(nn.Module):
         self.fusion_proj = nn.Linear(3 * d_model, d_model)
         
         # Cross-attention layers between modalities
+        # When we concatenate two modalities, input is 2*d_model
         self.cross_attentions = nn.ModuleList([
-            MultiHeadCrossAttention(d_model, num_heads) for _ in range(num_layers)
+            MultiHeadCrossAttention(d_model, num_heads, kv_dim=2*d_model) for _ in range(num_layers)
         ])
         
         # Self-attention for fused representation

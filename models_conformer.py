@@ -27,19 +27,19 @@ class ConformerBlock(nn.Module):
         self.norm_mha = nn.LayerNorm(d_model)
         self.dropout_mha = nn.Dropout(dropout)
         
-        # Convolution module
-        self.conv = nn.Sequential(
-            nn.LayerNorm(d_model),
+        # Convolution module (no LayerNorm inside, apply norm before)
+        self.conv_layers = nn.Sequential(
             nn.Conv1d(d_model, 2 * d_model, kernel_size, 
                      padding=(kernel_size - 1) // 2, groups=1),
             nn.GLU(dim=1),  # Gated Linear Unit
-            nn.DepthwiseConv1d(d_model, d_model, kernel_size, 
-                              padding=(kernel_size - 1) // 2, groups=d_model),
+            nn.Conv1d(d_model, d_model, kernel_size, 
+                     padding=(kernel_size - 1) // 2, groups=d_model),  # Depthwise conv
             nn.BatchNorm1d(d_model),
             nn.ReLU(),
             nn.Conv1d(d_model, d_model, 1),
             nn.Dropout(dropout)
         )
+        self.conv_norm = nn.LayerNorm(d_model)
         
         # Feedforward module 2
         self.ff2 = nn.Sequential(
@@ -75,10 +75,11 @@ class ConformerBlock(nn.Module):
         
         # Residual convolution (1D)
         res = x
-        x_conv = x.transpose(1, 2)  # (batch_size, d_model, seq_len)
-        x_conv = self.conv(x_conv)
-        x_conv = x_conv.transpose(1, 2)  # (batch_size, seq_len, d_model)
-        x = res + x_conv
+        x_norm = self.conv_norm(x)  # (batch, seq_len, d_model)
+        x_conv = x_norm.transpose(1, 2)  # (batch, d_model, seq_len)
+        x_conv = self.conv_layers(x_conv)  # (batch, d_model, seq_len)
+        x_conv = x_conv.transpose(1, 2)  # (batch, seq_len, d_model)
+        x = res + self.dropout_mha(x_conv)
         
         # Residual feedforward 2
         res = x

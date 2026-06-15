@@ -7,7 +7,7 @@ from typing import Tuple, Optional
 class HandEncoder(nn.Module):
     """Encoder for hand landmarks (21 landmarks -> 2 outputs)"""
     
-    def __init__(self, input_dim: int = 21 * 3, output_dim: int = 512):
+    def __init__(self, input_dim: int = 42 * 3, output_dim: int = 512):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim

@@ -47,9 +47,7 @@ class Trainer:
             batch_size = hand.shape[0]
             seq_len = hand.shape[1]
             
-            gloss_targets = torch.randint(0, self.model.vocab_size, 
-                                         (batch_size, seq_len//2), 
-                                         device=self.device)
+            gloss_targets = batch['gloss_ids'].unsqueeze(1).to(self.device)
             
             # Forward pass
             output = self.model(hand, face, pose, gloss_targets=gloss_targets)
@@ -80,9 +78,7 @@ class Trainer:
                 batch_size = hand.shape[0]
                 seq_len = hand.shape[1]
                 
-                gloss_targets = torch.randint(0, self.model.vocab_size,
-                                             (batch_size, seq_len//2),
-                                             device=self.device)
+                gloss_targets = batch['gloss_ids'].unsqueeze(1).to(self.device)
                 
                 output = self.model(hand, face, pose, gloss_targets=gloss_targets)
                 loss = output.get('rnnt_loss', torch.tensor(0.0, device=self.device))
@@ -93,7 +89,7 @@ class Trainer:
         return avg_loss
     
     def train(self, train_loader: DataLoader, val_loader: DataLoader,
-              num_epochs: int = 100, patience: int = 10):
+              num_epochs: int = 20, patience: int = 5):
         """Full training loop"""
         best_val_loss = float('inf')
         patience_counter = 0
@@ -176,24 +172,38 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
     
+    # Load dataset config
+    import json
+    with open('data/dataset_config.json', 'r') as f:
+        dataset_config = json.load(f)
+    
+    vocab_size = dataset_config['vocab_size']
+    print(f"Loaded dataset config: {vocab_size} glosses")
+    
     # Create model
-    model = ASLRecognitionPipeline(vocab_size=1000, english_vocab_size=5000)
-    print(f"Created model")
+    model = ASLRecognitionPipeline(vocab_size=vocab_size, english_vocab_size=5000)
+    print(f"Created model with vocab_size={vocab_size}")
     
-    # Create datasets (placeholder)
-    # In practice, replace with actual dataset
+    # Create datasets with real data from metadata.json
+    print("Loading datasets from data/metadata.json...")
+    train_dataset = LandmarkDataset(data_dir='data/train', split='train', metadata_file='data/metadata.json')
+    val_dataset = LandmarkDataset(data_dir='data/val', split='val', metadata_file='data/metadata.json')
+    
+    print(f"Train dataset: {len(train_dataset)} videos")
+    print(f"Val dataset: {len(val_dataset)} videos")
+    
     collator = LandmarkCollator()
-    
-    # Create dummy dataloaders for demo
-    train_loader = DataLoader([], batch_size=4, collate_fn=collator)
-    val_loader = DataLoader([], batch_size=4, collate_fn=collator)
+    train_loader = DataLoader(train_dataset, batch_size=2, collate_fn=collator, 
+                             num_workers=0, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=2, collate_fn=collator, 
+                           num_workers=0, shuffle=False)
     
     # Create trainer
     trainer = Trainer(model, device, checkpoint_dir='./checkpoints')
     
     # Train
     print("Starting training...")
-    trainer.train(train_loader, val_loader, num_epochs=100, patience=10)
+    trainer.train(train_loader, val_loader, num_epochs=20, patience=5)
     
     print("Training completed!")
 
