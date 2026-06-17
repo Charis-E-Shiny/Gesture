@@ -22,8 +22,9 @@ LANDMARK_WIDTH = 126 + 1404 + 99
 def download_kaggle_dataset(handle: str, output_dir: Path) -> Path:
     import kagglehub
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return Path(kagglehub.dataset_download(handle, output_dir=str(output_dir)))
+    path = kagglehub.dataset_download(handle)
+    print(f"Downloaded {handle} to {path}")
+    return Path(path)
 
 
 def clear_directory(path: Path):
