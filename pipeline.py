@@ -14,7 +14,9 @@ class ASLRecognitionPipeline(nn.Module):
     """Complete ASL recognition pipeline"""
     
     def __init__(self, vocab_size: int = 1000, hidden_dim: int = 512,
-                 english_vocab_size: int = 5000):
+                 english_vocab_size: int = 5000, num_heads: int = 8,
+                 encoder_layers: int = 2, fusion_layers: int = 2,
+                 conformer_layers: int = 4):
         super().__init__()
         self.vocab_size = vocab_size
         self.english_vocab_size = english_vocab_size
@@ -26,15 +28,42 @@ class ASLRecognitionPipeline(nn.Module):
         pose_dim = 99   # 33 landmarks × 3
         
         # Encoders for individual modalities
-        self.hand_encoder = HandEncoder(input_dim=hand_dim, output_dim=hidden_dim)
-        self.face_encoder = FaceEncoder(input_dim=face_dim, output_dim=hidden_dim)
-        self.pose_encoder = PoseEncoder(input_dim=pose_dim, output_dim=hidden_dim)
+        feedforward_dim = max(128, 4 * hidden_dim)
+        self.hand_encoder = HandEncoder(
+            input_dim=hand_dim,
+            output_dim=hidden_dim,
+            num_heads=num_heads,
+            num_layers=encoder_layers,
+            feedforward_dim=feedforward_dim,
+        )
+        self.face_encoder = FaceEncoder(
+            input_dim=face_dim,
+            output_dim=hidden_dim,
+            num_heads=num_heads,
+            num_layers=encoder_layers,
+            feedforward_dim=feedforward_dim,
+        )
+        self.pose_encoder = PoseEncoder(
+            input_dim=pose_dim,
+            output_dim=hidden_dim,
+            num_heads=num_heads,
+            num_layers=encoder_layers,
+            feedforward_dim=feedforward_dim,
+        )
         
         # Cross-modal fusion
-        self.fusion = CrossModalFusionTransformer(d_model=hidden_dim, num_heads=8)
+        self.fusion = CrossModalFusionTransformer(
+            d_model=hidden_dim,
+            num_heads=num_heads,
+            num_layers=fusion_layers,
+        )
         
         # Streaming encoder
-        self.conformer = ConformerStreamingEncoder(d_model=hidden_dim, num_heads=8)
+        self.conformer = ConformerStreamingEncoder(
+            d_model=hidden_dim,
+            num_heads=num_heads,
+            num_layers=conformer_layers,
+        )
         
         # RNNT for gloss recognition
         self.rnnt = RNNTTransducer(input_dim=hidden_dim, vocab_size=vocab_size)
@@ -65,17 +94,8 @@ class ASLRecognitionPipeline(nn.Module):
         Returns:
             output: dict with 'gloss_logits', 'english_logits', 'losses'
         """
-        # Encode individual modalities
-        hand_enc = self.hand_encoder(hand)
-        face_enc = self.face_encoder(face)
-        pose_enc = self.pose_encoder(pose)
-        
-        # Fuse modalities
-        fused = self.fusion(hand_enc, face_enc, pose_enc)
-        
-        # Streaming conformer encoder
-        conformer_out = self.conformer(fused, streaming=True)
-        
+        conformer_out = self.encode_landmarks(hand, face, pose)
+
         # RNNT for gloss recognition
         if gloss_targets is not None:
             gloss_logits, _ = self.rnnt(conformer_out, gloss_targets)
@@ -85,40 +105,54 @@ class ASLRecognitionPipeline(nn.Module):
             device = conformer_out.device
             empty_gloss = torch.zeros((batch_size, 1), dtype=torch.long, device=device)
             gloss_logits, _ = self.rnnt(conformer_out, empty_gloss)
-        
+
         output = {
             'gloss_logits': gloss_logits,  # (batch_size, seq_len, vocab_size)
         }
-        
+
         # Translation to English (if available)
         if english_targets is not None:
             # Predict gloss first
             gloss_pred = torch.argmax(gloss_logits, dim=-1)
-            
+
             # Translate to English
             english_logits = self.translator(gloss_pred, english_targets)
             output['english_logits'] = english_logits
-        
+
         # Compute losses if targets provided
         if gloss_targets is not None:
             batch_size = hand.shape[0]
             seq_len = gloss_logits.shape[1]
-            
+
             # Prepare lengths for RNNT loss
             input_lengths = torch.full((batch_size,), seq_len, dtype=torch.long)
-            target_lengths = torch.full((batch_size,), gloss_targets.shape[1], 
+            target_lengths = torch.full((batch_size,), gloss_targets.shape[1],
                                        dtype=torch.long)
-            
-            rnnt_loss = self.rnnt_loss(gloss_logits, gloss_targets, 
+
+            rnnt_loss = self.rnnt_loss(gloss_logits, gloss_targets,
                                       input_lengths, target_lengths)
             output['rnnt_loss'] = rnnt_loss
-        
+
         if english_targets is not None:
-            trans_loss = self.translation_loss(output['english_logits'], 
+            trans_loss = self.translation_loss(output['english_logits'],
                                               english_targets)
             output['translation_loss'] = trans_loss
-        
+
         return output
+
+    def encode_landmarks(self, hand: torch.Tensor, face: torch.Tensor,
+                         pose: torch.Tensor) -> torch.Tensor:
+        """Encode hand, face, and pose landmarks through fusion + conformer."""
+        hand_enc = self.hand_encoder(hand)
+        face_enc = self.face_encoder(face)
+        pose_enc = self.pose_encoder(pose)
+
+        # Fuse modalities
+        fused = self.fusion(hand_enc, face_enc, pose_enc)
+
+        # Streaming conformer encoder
+        conformer_out = self.conformer(fused, streaming=True)
+        return conformer_out
     
     def recognize_gloss(self, hand: torch.Tensor, face: torch.Tensor, 
                        pose: torch.Tensor) -> torch.Tensor:

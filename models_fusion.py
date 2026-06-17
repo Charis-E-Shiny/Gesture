@@ -47,7 +47,7 @@ class MultiHeadCrossAttention(nn.Module):
 
 
 class CrossModalFusionTransformer(nn.Module):
-    """Cross-modal fusion with concat and cross-attention (8 heads)"""
+    """Cross-modal fusion with concat and cross-attention."""
     
     def __init__(self, d_model: int = 512, num_heads: int = 8, num_layers: int = 2):
         super().__init__()
@@ -66,7 +66,7 @@ class CrossModalFusionTransformer(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=num_heads,
-            dim_feedforward=2048,
+            dim_feedforward=4 * d_model,
             batch_first=True,
             dropout=0.1
         )

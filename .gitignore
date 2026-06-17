@@ -1,16 +1,23 @@
-# Dataset videos
-data/train/
-data/val/
-data/test/
-
-# Temporary download folders
+# Dataset and generated artifacts
+data/*
+!data/.gitkeep
+checkpoints/*
+!checkpoints/.gitkeep
+eval_outputs/*
+!eval_outputs/.gitkeep
+cache/
+logs/
+uploads/
 WLASL_temp/
 
 # Python cache
 __pycache__/
 *.pyc
 
-checkpoints/
-
 # Logs
 *.log
+
+# Notebook/runtime noise
+.ipynb_checkpoints/
+wandb/
+mlruns/

@@ -1,304 +1,80 @@
-# ASL Recognition & Translation System
+# ASL Live Captioning Prototype
 
-A complete implementation of the ASL (American Sign Language) recognition and real-time translation system with the architecture shown in the specification.
+Terminal-first ASL recognition and English captioning pipeline for WLASL + How2Sign experiments.
 
-## Architecture Overview
+The repo keeps code in Git and generates datasets, checkpoints, and evaluation outputs at runtime. It is designed to run from a Kubeflow notebook-server terminal and uses CUDA automatically when PyTorch can see a GPU.
 
-```
-Webcam Stream (30-60 FPS)
-    ↓
-MediaPipe Holistic (landmark extraction)
-    ↓
-┌─────────────────────────────────┐
-│ Hand Encoder  │ Face Encoder  │ Pose Encoder
-└─────────────────────────────────┘
-    ↓
-Cross-modal Fusion Transformer (concat + cross-attention, 6 heads)
-    ↓
-Conformer Streaming Encoder (Conv + self-attention + causal masking)
-    ↓
-RNNT Transducer (prediction network + joint network)
-    ↓
-ASL Gloss Recognition
-    ↓
-ASL→English Translator (Seq2Seq)
-    ↓
-Live Caption Renderer (<500ms latency)
-```
+## Architecture
 
-## Components
+The full training path follows:
 
-### 1. **models_encoders.py** - Individual Modality Encoders
-- `HandEncoder`: Processes 21 hand landmarks (×3 coordinates = 63D)
-- `FaceEncoder`: Processes 468 face mesh points (×3 = 1404D)
-- `PoseEncoder`: Processes 33 body landmarks (×3 = 99D)
+1. WLASL / How2Sign real data
+2. MediaPipe-style hand, face, and pose features
+3. Hand encoder, face encoder, pose encoder
+4. Cross-modal fusion transformer
+5. Conformer streaming encoder
+6. RNN-T gloss recognition path
+7. Transformer caption/translation path
+8. Evaluation plots and notebook reports
 
-### 2. **models_fusion.py** - Cross-modal Fusion
-- `MultiHeadCrossAttention`: 6-head cross-attention mechanism
-- `CrossModalFusionTransformer`: Fuses hand, face, and pose representations
+For quick iteration, `MODE=prototype` trains a smaller live-caption head on the same encoded representation.
 
-### 3. **models_conformer.py** - Streaming Encoder
-- `ConformerBlock`: Combines convolution, self-attention, and feedforward
-- `ConformerStreamingEncoder`: Streaming-capable encoder with causal masking
+## Kubeflow Quick Run
 
-### 4. **models_rnnt.py** - RNNT Transducer
-- `RNNTTransducer`: Combines encoder output with prediction network
-- `RNNTLoss`: CTC-style loss for ASL recognition
-
-### 5. **models_translator.py** - ASL→English Translation
-- `TransformerTranslator`: Seq2Seq transformer for gloss-to-English translation
-- `TranslationLoss`: Cross-entropy loss with label smoothing
-
-### 6. **data_extractor.py** - Data Processing
-- `MediaPipeLandmarkExtractor`: Extracts landmarks from video frames
-- `LandmarkDataset`: PyTorch dataset for training
-- `LandmarkCollator`: Handles variable-length sequences
-
-### 7. **pipeline.py** - Complete Pipeline
-- `ASLRecognitionPipeline`: Combines all components end-to-end
-- Supports both training and inference modes
-
-### 8. **train.py** - Training Loop
-- `Trainer`: Manages training, validation, checkpointing
-- Distributed training support
-
-### 9. **inference.py** - Real-time Inference
-- `RealtimeInferencePipeline`: Real-time processing from webcam/video
-- Frame buffering for streaming
-- Latency tracking
-
-### 10. **app.py** - FastAPI Web Server
-- REST API endpoints for inference
-- WebSocket for real-time streaming
-- Video upload and processing
-
-## Installation
-
-### Prerequisites
-- Python 3.8+
-- CUDA 11.0+ (for GPU support)
-
-### Setup
+Set Kaggle credentials in the notebook server environment or terminal:
 
 ```bash
-# Clone repository
-cd Gesture
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Verify installation
-python -c "import torch; print(f'PyTorch: {torch.__version__}'); import mediapipe; print('MediaPipe: OK')"
+export KAGGLE_USERNAME="your_username"
+export KAGGLE_KEY="your_api_key"
 ```
 
-## Usage
-
-### 1. Training
+Small end-to-end run:
 
 ```bash
-python train.py
+bash scripts/kubeflow_full_run.sh
 ```
 
-Configuration can be modified in the script. The trainer will:
-- Extract landmarks from videos using MediaPipe
-- Train the RNNT transducer for gloss recognition
-- Train the Seq2Seq translator for English translation
-- Save checkpoints to `./checkpoints/best.pt`
-
-### 2. Real-time Inference (Webcam)
-
-```python
-from inference import RealtimeInferencePipeline
-
-pipeline = RealtimeInferencePipeline(model_path='./checkpoints/best.pt')
-pipeline.run_webcam(camera_id=0)
-```
-
-Features:
-- 30 FPS webcam capture
-- Real-time landmark extraction
-- Streaming inference with causal attention
-- Live caption rendering
-- Latency tracking (<500ms target)
-
-### 3. Video Processing
-
-```python
-from inference import RealtimeInferencePipeline
-
-pipeline = RealtimeInferencePipeline(model_path='./checkpoints/best.pt')
-results = pipeline.process_video_file('input.mp4', output_path='output_with_captions.mp4')
-```
-
-### 4. FastAPI Server
+Full architecture run:
 
 ```bash
-# Start server
-python app.py
-
-# Or with uvicorn
-uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+MODE=full EPOCHS=10 BATCH_SIZE=4 MAX_WLASL=96 MAX_HOW2SIGN=96 bash scripts/kubeflow_full_run.sh
 ```
 
-Endpoints:
-- `GET /health` - Health check
-- `GET /info` - Model information
-- `POST /infer_frame` - Single frame inference
-- `WebSocket /ws` - Real-time streaming
-- `POST /upload_video` - Video upload and processing
+## Useful Environment Variables
 
-### 5. Using via Python
-
-```python
-from pipeline import ASLRecognitionPipeline
-import torch
-
-# Create model
-model = ASLRecognitionPipeline(vocab_size=1000, english_vocab_size=5000)
-
-# Load checkpoint
-checkpoint = torch.load('./checkpoints/best.pt')
-model.load_state_dict(checkpoint['model_state_dict'])
-
-# Inference
-hand = torch.randn(1, 30, 126)  # (batch, seq_len, hand_dim)
-face = torch.randn(1, 30, 1404)  # (batch, seq_len, face_dim)
-pose = torch.randn(1, 30, 99)   # (batch, seq_len, pose_dim)
-
-output = model(hand, face, pose)
-gloss_ids = torch.argmax(output['gloss_logits'], dim=-1)
-english_ids = model.translate_gloss(gloss_ids)
-```
-
-## Dataset Format
-
-Expected directory structure:
-```
-data/
-├── train/
-│   └── gloss_name/
-│       ├── video_01.mp4
-│       └── video_02.mp4
-├── val/
-│   └── gloss_name/
-│       └── video_01.mp4
-└── test/
-    └── gloss_name/
-        └── video_01.mp4
-```
-
-Supported ASL datasets:
-- WLASL (ASL Dataset with full gloss annotations)
-- ASLSee
-- Custom video datasets with gloss and English translations
-
-## Model Architecture Details
-
-### Encoders
-- **Input**: Raw landmark coordinates (hand, face, pose)
-- **Processing**: Linear embedding → Positional encoding → 2-layer Transformer
-- **Output**: 512-dim sequence embeddings
-
-### Fusion Transformer
-- **Input**: 3 × 512-dim sequences (hand, face, pose)
-- **Process**: Concat to 1536-dim → 6-head cross-attention
-- **Output**: 512-dim fused representation
-
-### Conformer Encoder
-- **Components**: Conv1D + Depthwise conv + GLU + Self-attention
-- **Features**: Causal masking for streaming, residual connections
-- **Layers**: 4 conformer blocks
-
-### RNNT Transducer
-- **Prediction Network**: 2-layer LSTM on previous gloss tokens
-- **Joint Network**: Concat encoder output + prediction → tanh → Linear
-- **Loss**: CTC-style loss with blank token
-
-### Seq2Seq Translator
-- **Encoder**: Processes gloss tokens
-- **Decoder**: Generates English text with causal masking
-- **Attention**: Multi-head cross-attention between encoder and decoder
-
-## Performance Targets
-
-- **Latency**: <500ms for end-to-end inference
-- **FPS**: 30-60 frames per second from webcam
-- **Accuracy**: Dataset-dependent (typical WER: 15-30%)
-
-## Configuration
-
-Key hyperparameters in `train.py`:
-
-```python
-# Model
-vocab_size = 1000                    # ASL gloss vocabulary
-english_vocab_size = 5000            # English vocabulary
-hidden_dim = 512                     # Model dimension
-
-# Training
-learning_rate = 1e-3
-batch_size = 4
-num_epochs = 100
-patience = 10                        # Early stopping
-
-# Data
-max_buffer_size = 30                 # Frames for streaming
-```
-
-## Troubleshooting
-
-### GPU Memory Issues
-```python
-# Reduce batch size in train.py
-batch_size = 2
-
-# Or use gradient accumulation
-```
-
-### Inference Latency
-```python
-# Reduce max_buffer_size for less latency
-pipeline.max_buffer_size = 10  # Down from 30
-```
-
-### Model Not Found
 ```bash
-# Ensure checkpoints directory exists
-mkdir -p ./checkpoints
-
-# Download pre-trained weights (if available)
-# wget <model-url> -O ./checkpoints/best.pt
+MODE=prototype   # prototype or full
+MAX_WLASL=48
+MAX_HOW2SIGN=48
+MAX_FRAMES=32
+EPOCHS=5
+BATCH_SIZE=4
+HIDDEN_DIM=128
+NUM_HEADS=8
 ```
 
-## Future Improvements
+## Outputs
 
-1. **Multi-hand gestures**: Enhanced hand-hand interactions
-2. **Facial expressions**: Better integration of face features
-3. **Context modeling**: Temporal attention across longer sequences
-4. **Multi-lingual translation**: Support for other sign languages
-5. **Mobile deployment**: ONNX export and mobile optimization
-6. **User feedback loop**: Active learning from corrections
+Generated files are intentionally ignored by Git:
 
-## References
+- `data/`
+- `checkpoints/`
+- `eval_outputs/`
 
-- MediaPipe: https://github.com/google/mediapipe
-- Conformer: https://arxiv.org/abs/2005.08100
-- RNNT: https://arxiv.org/abs/1811.06621
-- Transformer: https://arxiv.org/abs/1706.03762
+Evaluation scripts save metrics JSON, PNG plots, and `.ipynb` reports.
 
-## License
+## Live Captioning
 
-MIT License
+After prototype training:
 
-## Citation
-
-If you use this project, please cite:
-
-```bibtex
-@software{asl_recognition_2024,
-  title={ASL Recognition and Translation System},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/yourusername/asl-recognition}
-}
+```bash
+python live_caption.py --checkpoint checkpoints/prototype_best.pt
 ```
+
+For a saved video:
+
+```bash
+python live_caption.py --checkpoint checkpoints/prototype_best.pt --video path/to/video.mp4
+```
+
+See `KUBEFLOW_RUN.md` for a fuller terminal guide.
