@@ -1,127 +1,148 @@
 {
   "split": "val",
-  "num_samples": 17,
-  "gloss_accuracy": 0.5882352941176471,
-  "caption_accuracy": 0.0,
+  "num_samples": 20,
+  "gloss_accuracy": 0.15,
+  "caption_accuracy": 0.1,
   "predictions": [
     {
       "dataset": "wlasl",
-      "actual_gloss": "turn",
-      "actual_caption": "turn",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "delay",
+      "actual_caption": "delay",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "present",
-      "actual_caption": "present",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "delay",
+      "actual_caption": "delay",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "dog",
-      "actual_caption": "dog",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "sandwich",
+      "actual_caption": "sandwich",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "we",
-      "actual_caption": "we",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "sandwich",
+      "actual_caption": "sandwich",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "gather",
-      "actual_caption": "gather",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "vice president",
-      "actual_caption": "vice president",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 7,
+      "pred_caption": "order"
     },
     {
       "dataset": "wlasl",
-      "actual_gloss": "deep",
-      "actual_caption": "deep",
-      "pred_caption_id": 40,
-      "pred_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly."
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 7,
+      "pred_caption": "order"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "1sIQ1SMNHqM 18 8 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "change",
+      "actual_caption": "change",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "Thank you.",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "change",
+      "actual_caption": "change",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "Take a brush, little glue brush just like this, and spread this glue out very very thoroughly.",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "fish",
+      "actual_caption": "fish",
+      "pred_caption_id": 7,
+      "pred_caption": "order"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "f8ShD9YwEfo 12 2 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "fish",
+      "actual_caption": "fish",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "doMosV zfCI 2 2 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "like",
+      "actual_caption": "like",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "1gTkFzIRzYk 8 8 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "like",
+      "actual_caption": "like",
+      "pred_caption_id": 7,
+      "pred_caption": "order"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "B ye00IgI4w 8 5 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "accident",
+      "actual_caption": "accident",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "5XSD1NAFaxA 11 8 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "order",
+      "actual_caption": "order",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "Does everything usually take place in the morning, or in the middle of the night, or in the daytime?",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "order",
+      "actual_caption": "order",
+      "pred_caption_id": 7,
+      "pred_caption": "order"
     },
     {
-      "dataset": "how2sign",
-      "actual_gloss": "continuous_sign",
-      "actual_caption": "1cbTN8a73zo 8 5 rgb front",
-      "pred_caption_id": 66,
-      "pred_caption": "eefsk97G 44 6 5 rgb front"
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "dark",
+      "actual_caption": "dark",
+      "pred_caption_id": 5,
+      "pred_caption": "fish"
     }
   ]
 }

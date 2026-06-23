@@ -9,7 +9,7 @@ class TransformerTranslator(nn.Module):
     
     def __init__(self, src_vocab_size: int = 1000, tgt_vocab_size: int = 5000,
                  d_model: int = 512, num_heads: int = 8, num_layers: int = 4,
-                 dropout: float = 0.1, max_len: int = 512):
+                 dropout: float = 0.1, max_len: int = 1024):
         super().__init__()
         self.d_model = d_model
         

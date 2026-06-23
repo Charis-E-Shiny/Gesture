@@ -1,5 +1,5 @@
 {
-  "vocab_size": 51,
-  "caption_vocab_size": 97,
-  "num_samples": 96
+  "vocab_size": 12,
+  "caption_vocab_size": 11,
+  "num_samples": 100
 }

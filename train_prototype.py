@@ -34,7 +34,8 @@ def run_epoch(model, loader, optimizer, device, train: bool):
             output = model(hand, face, pose)
             gloss_loss = F.cross_entropy(output["gloss_logits"], gloss_ids)
             caption_loss = F.cross_entropy(output["caption_logits"], caption_ids)
-            loss = gloss_loss + caption_loss
+            #loss = gloss_loss + caption_loss
+            loss = gloss_loss
 
             if train:
                 optimizer.zero_grad()

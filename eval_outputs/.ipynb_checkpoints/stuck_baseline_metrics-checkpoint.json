@@ -1,0 +1,253 @@
+{
+  "split": "val",
+  "num_samples": 35,
+  "gloss_accuracy": 0.05714285714285714,
+  "caption_accuracy": 0.08571428571428572,
+  "predictions": [
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "delay",
+      "actual_caption": "delay",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "delay",
+      "actual_caption": "delay",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "sandwich",
+      "actual_caption": "sandwich",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "sandwich",
+      "actual_caption": "sandwich",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "thanksgiving",
+      "actual_caption": "thanksgiving",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "change",
+      "actual_caption": "change",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "change",
+      "actual_caption": "change",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "fish",
+      "actual_caption": "fish",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "fish",
+      "actual_caption": "fish",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "like",
+      "actual_caption": "like",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "like",
+      "actual_caption": "like",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "accident",
+      "actual_caption": "accident",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "order",
+      "actual_caption": "order",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "order",
+      "actual_caption": "order",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "what",
+      "actual_caption": "what",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "dark",
+      "actual_caption": "dark",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "yes",
+      "actual_caption": "yes",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "yes",
+      "actual_caption": "yes",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "environment",
+      "actual_caption": "environment",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "interest",
+      "actual_caption": "interest",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "interest",
+      "actual_caption": "interest",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "year",
+      "actual_caption": "year",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "blanket",
+      "actual_caption": "blanket",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "blanket",
+      "actual_caption": "blanket",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "wait",
+      "actual_caption": "wait",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "thursday",
+      "actual_caption": "thursday",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "thursday",
+      "actual_caption": "thursday",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "tell",
+      "actual_caption": "tell",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "tell",
+      "actual_caption": "tell",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "bar",
+      "actual_caption": "bar",
+      "pred_caption_id": 16,
+      "pred_caption": "thursday"
+    },
+    {
+      "dataset": "wlasl",
+      "actual_gloss": "bar",
+      "actual_caption": "bar",
+      "pred_caption_id": 19,
+      "pred_caption": "year"
+    }
+  ]
+}

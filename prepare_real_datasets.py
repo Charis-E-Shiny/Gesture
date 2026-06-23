@@ -95,40 +95,55 @@ def load_wlasl_metadata(root: Path) -> Dict[str, Dict]:
 
 def prepare_wlasl(root: Path, out_dir: Path, max_samples: int,
                   max_frames: int, seed: int) -> List[Dict]:
+    from collections import defaultdict
+
     metadata = load_wlasl_metadata(root)
     videos = [path for path in root.rglob("*") if path.is_file() and valid_video(path)]
-    random.Random(seed).shuffle(videos)
 
-    extractor = MediaPipeLandmarkExtractor()
-    samples = []
+    by_gloss = defaultdict(list)
+
     for video_path in videos:
-        if len(samples) >= max_samples:
-            break
         item = metadata.get(video_path.stem)
-        if not item:
-            gloss = video_path.parent.name
-            if gloss.lower() in {"train", "val", "test", "videos", "data"}:
+        if item:
+            by_gloss[item["gloss"]].append((video_path, item))
+
+    # keep glosses with enough examples
+    selected_glosses = [
+        gloss for gloss, items in by_gloss.items()
+        if len(items) >= 10
+    ]
+
+    selected_glosses = selected_glosses[:50]   # 50 classes
+    samples = []
+    extractor = MediaPipeLandmarkExtractor()
+
+    for gloss in selected_glosses:
+        items = by_gloss[gloss][:10]   # 10 videos per class
+
+        for video_path, item in items:
+            try:
+                hand, face, pose = extractor.process_video(str(video_path), max_frames=max_frames)
+            except Exception as exc:
+                print(f"Skipping WLASL video {video_path}: {exc}")
                 continue
-            item = {"gloss": gloss, "split": "train"}
 
-        try:
-            hand, face, pose = extractor.process_video(str(video_path), max_frames=max_frames)
-        except Exception as exc:
-            print(f"Skipping WLASL video {video_path}: {exc}")
-            continue
-        if len(hand) == 0:
-            continue
+            if len(hand) == 0:
+                continue
 
-        feature_rel = Path("features") / "wlasl" / f"{video_path.stem}.npz"
-        save_feature(out_dir / feature_rel, hand, face, pose)
-        samples.append({
-            "dataset": "wlasl",
-            "split": normalize_split(item.get("split", "train")),
-            "gloss": item["gloss"],
-            "caption": gloss_to_caption(item["gloss"]),
-            "feature_path": feature_rel.as_posix(),
-            "source_path": str(video_path),
-        })
+            feature_rel = Path("features") / "wlasl" / f"{video_path.stem}.npz"
+            save_feature(out_dir / feature_rel, hand, face, pose)
+
+            samples.append({
+                "dataset": "wlasl",
+                "split": normalize_split(item.get("split", "train")),
+                "gloss": item["gloss"],
+                "caption": gloss_to_caption(item["gloss"]),
+                "feature_path": feature_rel.as_posix(),
+                "source_path": str(video_path),
+            })
+
+            if len(samples) >= max_samples:
+                return samples
 
     return samples
 
@@ -208,7 +223,7 @@ def prepare_how2sign(root: Path, out_dir: Path, max_samples: int,
         samples.append({
             "dataset": "how2sign",
             "split": "train" if len(samples) % 5 else "val",
-            "gloss": "continuous_sign",
+            "gloss": caption.split()[0].lower() if caption.split() else "continuous_sign",
             "caption": caption,
             "feature_path": feature_rel.as_posix(),
             "source_path": str(feature_path),
